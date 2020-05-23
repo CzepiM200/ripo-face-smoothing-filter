@@ -1,15 +1,15 @@
-#RiPO projekt - wygładzanie twarzy real time
+# RiPO projekt - wygładzanie twarzy real time
 
-##URUCHOMIENIE:
+## URUCHOMIENIE:
 $ ./display.py
 
-##Zrobione:
+## Zrobione:
 * Wyświetlanie obrazu z kamery
 * Wykrywanie twarzy klasyfikatorem kaskadowym Haara z opencv
 * Przycisk do aktywacji filtru
 
-##Do zrobienia:
+## Do zrobienia:
 * Podzielenie twarzy na segmenty
 * Zastosowanie filtru
-###EWENTUALNIE:
+### EWENTUALNIE:
  * Zapisywanie do pliku
