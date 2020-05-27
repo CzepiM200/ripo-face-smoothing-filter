@@ -31,7 +31,7 @@ while opened:
 
     #Konwersja na skalę szarości - pozwala na wykrycie twarzy
     gray = cv.cvtColor(frame, cv.COLOR_BGR2GRAY)
-    faces = face_detection.detectMultiScale(gray, minNeighbors=6, minSize=(100, 100))
+    faces = face_detection.detectMultiScale(gray, minNeighbors=10, minSize=(100, 100))
     
 
     #Rysowanie kwadratu na wykrytej twarzy
@@ -45,9 +45,9 @@ while opened:
         #wykrywanie oczu
         eye_gray = gray[y:y+height, x:x+width]
         eye_color = frame[y:y+height, x:x+width]
-        eyes = eyes_detection.detectMultiScale(eye_gray, minNeighbors=6, minSize=(30, 30))
+        eyes = eyes_detection.detectMultiScale(eye_gray, minNeighbors=15, minSize=(30, 30), maxSize=(40, 40))
         for (eye_x, eye_y, eye_width, eye_height) in eyes:
-            #cv.rectangle(eye_color, (eye_x, eye_y), (eye_x+eye_width, eye_y+eye_height), (0xD9, 0xA2, 0x3D), 1)
+            cv.rectangle(eye_color, (eye_x, eye_y), (eye_x+eye_width, eye_y+eye_height), (0xD9, 0xA2, 0x3D), 1)
             
             #nakładanie filtru na twarz
             kernel = np.ones((5,5),np.float32)/25
