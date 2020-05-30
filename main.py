@@ -113,7 +113,7 @@ while opened:
 
             #Filtr całej twarzy
             faceImage = frame[y:y+h, x:x+w].copy()
-            faceImage = cv.GaussianBlur(faceImage,(5,5),0)
+            faceImage = cv.medianBlur(faceImage,5)
             frame[y:y+h, x:x+w] = faceImage.copy()
 
             frame[mouths[3,1]:mouths[9,1], mouths[1,0]:mouths[7,0]] = mouthImage.copy()
@@ -121,7 +121,6 @@ while opened:
             frame[eyes[7,1]:eyes[10,1], eyes[6,0]:eyes[9,0]] = rightEyeImage.copy()
 
 
-    frame = cv.GaussianBlur(frame,(5,5),0)
     cv.imshow("Face smoothing", frame)
 
     #Zamknięcie po wciśnięciu klawisza ESC
