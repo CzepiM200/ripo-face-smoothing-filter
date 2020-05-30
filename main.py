@@ -51,6 +51,7 @@ while opened:
     gray = cv.cvtColor(frame, cv.COLOR_BGR2GRAY)
     
     frame = imutils.resize(frame, width=640)
+    original = frame.copy()
 
     #Detekcja twarzy
     rects = detector(gray, 0)
@@ -58,24 +59,55 @@ while opened:
     #Rysowanie kwadratu na wykrytej twarzy
     for rect in rects:
         (x, y, w, h) = face_utils.rect_to_bb(rect)
+
+        #Rysowane prostokąta twarzy
         cv.rectangle(frame, (x, y), (x + w, y + h), (0, 255, 0), 2)
 
         #Detekja oczu
         eyes = eyesPredictor(gray, rect)
         eyes = face_utils.shape_to_np(eyes)
 		
+        #Rysowanie punktów oka
         for (sX, sY) in eyes:
             cv.circle(frame, (sX, sY), 1, (0, 0, 255), -1)
         
+        leftEyeImage = frame[eyes[2,1]:eyes[5,1], eyes[0,0]:eyes[3,0]].copy()
+        cv.imshow("LeftEye", leftEyeImage) 
+        rightEyeImage = frame[eyes[7,1]:eyes[10,1], eyes[6,0]:eyes[9,0]].copy()
+        cv.imshow("RighttEye", leftEyeImage)
+
         #Detekcja ust
         mouths = mouthPredictor(gray, rect)
         mouths = face_utils.shape_to_np(mouths)
-		
-        for (mX, mY) in mouths:
-            cv.circle(frame, (mX, mY), 1, (255, 0, 0), -1)
 
-    #if filter_enabled == 1:
-        #Tu miejsce na filtrację
+        #Rysowanie punktów ust
+        for (mX, mY) in mouths:
+            #cv.circle(frame, (mX, mY), 1, (255, 0, 0), -1)
+            cv.circle(frame, (mX, mY), 1, (255, 0, 0), -1)
+            
+        mouthImage = frame[mouths[3,1]:mouths[9,1], mouths[0,0]:mouths[6,0]].copy()
+        cv.imshow("Mouth", mouthImage)            
+                
+            
+            
+        
+        if filter_enabled == 1:
+            
+            # X lewy i prawy print(mouths[0,0], mouths[8,0]);
+            # Y górny dolny print(mouths[0,1],mouths[6,1])
+
+            #Filtr całej twarzy
+            faceImage = frame[y:y+h, x:x+w].copy()
+            faceImage = cv.GaussianBlur(faceImage,(5,5),0)
+            frame[y:y+h, x:x+w] = faceImage.copy()
+
+            frame[mouths[3,1]:mouths[9,1], mouths[0,0]:mouths[6,0]] = mouthImage.copy()
+        
+
+
+    # if filter_enabled == 1:
+    #     frame = cv.GaussianBlur(frame,(5,5),0)
+    #     frame = original.copy()
 
 
     #frame = cv.resize(frame, (int(frame.shape[1] / frame.shape[0] * 800), 800))
@@ -88,5 +120,6 @@ while opened:
 
 #Zamknięcie okna
 cv.destroyWindow("Face smoothing")
+
 #Zwolnienie dostępu do kamery
 feed.release()
