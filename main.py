@@ -1,11 +1,7 @@
 #!/usr/bin/python3
 
 import cv2 as cv
-import numpy as np
 from imutils import face_utils
-import argparse
-import imutils
-import time
 import dlib
 
 # ap = argparse.ArgumentParser()
@@ -15,32 +11,26 @@ import dlib
 # 	help="./ibug_300W_large_face_landmark_dataset/mouth_predictor.dat")
 # args = vars(ap.parse_args())
 
-
-def addRed(image):
-	# split the image into its BGR components
-	(B, G, R) = cv.split(image)
-	# find the maximum pixel intensity values for each
-	# (x, y)-coordinate,, then set all pixel values less
-	# than M to zero
-	M = np.maximum(np.maximum(R, G), B)
-	#R[R < M] = 0
-	G[G < 200] = 0
-	B[B < 200] = 0
-	# merge the channels back together and return the image
-	return cv.merge([B, G, R])
-    
-#Wczytywanie prekyktorów oczy i ust
+#Detekcja twarzy
 detector = dlib.get_frontal_face_detector()
+#Wczytywanie prekyktorów oczy i ust
 eyesPredictor = dlib.shape_predictor('./eye_predictor.dat')
 mouthPredictor = dlib.shape_predictor('./mouth_predictor.dat')
 
 #Zmienna określająca stan włączenia filtru
 filter_enabled = 0
 
+#Zmienna określająca stan włączenia elementów pomocniczych zaznaczających wykryte elementy twarzy
+overlay_enabled  = 1
+
 #Funkcja przełączająca filtr
-def toggle(x):
+def toggle_filter(x):
     global filter_enabled
     filter_enabled = x
+
+def toggle_overlay(x):
+    global overlay_enabled 
+    overlay_enabled = x
 
 #Utworzenie okna
 cv.namedWindow("Face smoothing")
@@ -49,7 +39,8 @@ cv.namedWindow("Face smoothing")
 feed = cv.VideoCapture(0)
 
 #Przełącznik filtru
-cv.createTrackbar("Filtr", "Face smoothing", 0, 1, toggle)
+cv.createTrackbar("Filter", "Face smoothing", 0, 1, toggle_filter)
+cv.createTrackbar("Overlay", "Face smoothing", 1, 1, toggle_overlay)
 
 #Czytanie obrazu z kamery dopóki jest dostępna
 if feed.isOpened():
@@ -64,56 +55,44 @@ while opened:
     #Konwersja na skalę szarości - pozwala na wykrycie twarzy
     gray = cv.cvtColor(frame, cv.COLOR_BGR2GRAY)
     
-    frame = imutils.resize(frame, width=640)
     original = frame.copy()
 
     #Detekcja twarzy
     rects = detector(gray, 0)
 
-    #Rysowanie kwadratu na wykrytej twarzy
+    #Dla każdej z wykrytych twarzy
     for rect in rects:
         (x, y, w, h) = face_utils.rect_to_bb(rect)
-
-        #Rysowane prostokąta twarzy
-        cv.rectangle(frame, (x, y), (x + w, y + h), (0, 255, 0), 2)
-
-        #Detekja oczu
-        eyes = eyesPredictor(gray, rect)
-        eyes = face_utils.shape_to_np(eyes)
-		
-        #Rysowanie punktów oka
-        for (sX, sY) in eyes:
-            cv.circle(frame, (sX, sY), 1, (0, 0, 255), -1)
-        
-        leftEyeImage = frame[eyes[2,1]:eyes[5,1], eyes[0,0]:eyes[3,0]].copy()
-        cv.imshow("LeftEye", leftEyeImage) 
-        rightEyeImage = frame[eyes[7,1]:eyes[10,1], eyes[6,0]:eyes[9,0]].copy()
-        cv.imshow("RighttEye", leftEyeImage)
 
         #Detekcja ust
         mouths = mouthPredictor(gray, rect)
         mouths = face_utils.shape_to_np(mouths)
-
-        #Rysowanie punktów ust
-        for (mX, mY) in mouths:
-            #cv.circle(frame, (mX, mY), 1, (255, 0, 0), -1)
-            cv.circle(frame, (mX, mY), 1, (255, 0, 0), -1)
-            
-        mouthImage = frame[mouths[3,1]:mouths[9,1], mouths[1,0]:mouths[7,0]].copy()
-        mouthImage = addRed(mouthImage).copy()
-        cv.imshow("Mouth", mouthImage)            
-                
-            
-            
+        #Detekcja oczu
+        eyes = eyesPredictor(gray, rect)
+        eyes = face_utils.shape_to_np(eyes)
+		
+        if overlay_enabled == 1:
+            #Rysowane prostokąta twarzy
+            cv.rectangle(frame, (x, y), (x + w, y + h), (0, 255, 0), 2)
+            #Rysowanie punktów oka
+            for (sX, sY) in eyes:
+                cv.circle(frame, (sX, sY), 1, (0, 0, 255), -1)
+            #Rysowanie punktów ust
+            for (mX, mY) in mouths:
+                cv.circle(frame, (mX, mY), 1, (255, 0, 0), -1)
         
+        #Zapisanie obszarów zaznaczających wykryte predyktorem oczy i usta
+        leftEyeImage = frame[eyes[2,1]:eyes[5,1], eyes[0,0]:eyes[3,0]].copy()
+        rightEyeImage = frame[eyes[7,1]:eyes[10,1], eyes[6,0]:eyes[9,0]].copy()
+        mouthImage = frame[mouths[3,1]:mouths[9,1], mouths[1,0]:mouths[7,0]].copy()   
+                
         if filter_enabled == 1:
-            
             # X lewy i prawy print(mouths[0,0], mouths[8,0]);
             # Y górny dolny print(mouths[0,1],mouths[6,1])
 
             #Filtr całej twarzy
             faceImage = frame[y:y+h, x:x+w].copy()
-            faceImage = cv.medianBlur(faceImage,5)
+            faceImage = cv.medianBlur(faceImage,9)
             frame[y:y+h, x:x+w] = faceImage.copy()
 
             frame[mouths[3,1]:mouths[9,1], mouths[1,0]:mouths[7,0]] = mouthImage.copy()

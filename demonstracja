@@ -1,0 +1,9 @@
+To jest demonstracja naszej implementacji wstępnej odmładzania twarzy real-time
+
+Po uruchomieniu programu widzimy obraz z kamery i wykrytą twarz oraz wykryte z użyciem predyktorów oczy i usta
+Używając dolnego suwaka jesteśmy w stanie wyłączyć overlay, tak, żeby widzieć czysty obraz
+A używając suwaka górnego jesteśmy w stanie włączyć filtr wygładzający
+Jak widać filtr nie rozmywa oczu ani ust, zgodnie z założeniami.
+Głównym problemem na ten moment jest to, że działa na cały prostokąt wykrytej twarzy, tak więc rozmywa również przykładowo elementy ubioru czy tła
+
+To chyba na tyle
